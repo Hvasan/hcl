@@ -1,0 +1,63 @@
+---
+# Deployment Manifest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service-deployment
+  labels:
+    app: patient-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+        - name: patient-service-container
+          image: your-docker-image # Replace with your actual Docker image name
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+# Service Manifest
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service-service
+spec:
+  selector:
+    app: patient-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP # Use ClusterIP for internal communication within the cluster
+---
+# Ingress Manifest
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: patient-service-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /  # Add this if you need to rewrite the path
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /patients
+            pathType: Prefix
+            backend:
+              service:
+                name: patient-service-service
+                port:
+                  number: 80
